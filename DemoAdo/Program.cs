@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -14,15 +15,63 @@ namespace DemoAdo
     {
         static void Main(string[] args)
         {
+            #region 已经学完
+
+            //ConnectDataBase();
+
+
             //TryTransactionScope();
 
             //TestDataTable();
 
             //事务SqlTransaction
+            //TestTrasactionAdo();
+
+            #endregion
+        }
+
+        private static void ConnectDataBase()
+        {
+            SqlConnection conn = new SqlConnection();
+            SqlConnectionStringBuilder connStrBuilder = new SqlConnectionStringBuilder();
+            connStrBuilder.DataSource = ".";
+            connStrBuilder.InitialCatalog = "HG";
+            connStrBuilder.UserID = "sa";
+            connStrBuilder.Password = "Chendong144216,";
+            connStrBuilder.Pooling = false; //禁用连接池
+            string Connstring = ConfigurationManager.ConnectionStrings["SqlConnectionString"].ConnectionString;
+            string connStr = ConfigurationManager.AppSettings["SqlConnectionString"].ToString();
+            conn.ConnectionString = "Server=DANLAPTOP\\HG;DataBase=HG;uid=sa;pwd=Chendong144216,;";
+            //Sql server 身份验证
+            //conn.ConnectionString = "Data Source=.;Initial Catalog=HG;User Id=sa;Password=Chendong144216,;";
+            //Windows身份验证
+            //conn.ConnectionString = "Server=DANLAPTOP\\HG;DataBase=HG;Integrated Security=SSPI";
+
+            //oracle
+            // Data Source User Id Password
+
+            //MySql
+            // Data Source Initial Catalog User Id Passsword
+
+            //Access
+            //Provider=Microsoft.Jet.OLEDB.4.0;    Data Source=文件的绝对路径  User Id=admin; Password = 
+
+            string dataBaseString = conn.Database;  //要链接的数据库名称（只读属性）
+            string dataSuorceString = conn.DataSource; //数据源 Local . Ip,端口号 （只读属性）
+            ConnectionState connState = conn.State; //链接状态（只读属性）
+            int timeOut = conn.ConnectionTimeout; //链接超时 ，默认是15
+
+            conn.Open();
+            conn.Close();   //后还可以用Open()方法重新打开
+            conn.Dispose(); //所有属性清空，重新打开需要重新设置链接字符串
+        }
+
+        private static void TestTrasactionAdo()
+        {
             DbConnection conn = new SqlConnection("Data Source=DANLAPTOP\\HG;Initial Catalog=HG;Persist Security Info=True;User ID=sa;Password=Chendong144216,");
             using (conn)
             {
-                DbTransaction tran=null;
+                DbTransaction tran = null;
                 try
                 {
 
@@ -34,14 +83,14 @@ namespace DemoAdo
                     //定义要执行的操作
                     cmd.CommandText = "INSERT INTO tblCat1(FCat1,FCat1Code) values(@FCat1,@FCat1Code);SELECT @@identity";
                     cmd.Parameters.Clear();
-                    cmd.Parameters.Add(new SqlParameter("@FCat1","测试"));
-                    cmd.Parameters.Add(new SqlParameter("@FCat1Code","C"));
+                    cmd.Parameters.Add(new SqlParameter("@FCat1", "测试"));
+                    cmd.Parameters.Add(new SqlParameter("@FCat1Code", "C"));
                     object oId = cmd.ExecuteScalar();
                     cmd.Parameters.Clear();
                     int cat1ID = 0;
                     if (oId != null)
                     {
-                        cat1ID = int.Parse(oId.ToString()) ;
+                        cat1ID = int.Parse(oId.ToString());
                     }
                     cmd.CommandText = "INSERT INTO tblCat2(FCat2,FCat2Code,FCat1ID) VALUES(@FCat2,@FCat2Code,@FCat1ID)";
                     cmd.Parameters.Add(new SqlParameter("@FCat2", "测试"));
@@ -63,7 +112,6 @@ namespace DemoAdo
                 }
 
             }
-
         }
 
         private static void TestDataTable()
