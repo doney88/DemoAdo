@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
-
+using System.Data;
 namespace DemoAdo
 {
     class Program
@@ -29,12 +29,83 @@ namespace DemoAdo
             //TestTrasactionAdo();
             //TestConnectionPool();
 
+            //TestCreateCommand();
+            //TestCommandExecuteNonQuery();
             #endregion
-
 
 
             Console.ReadKey();
         }
+
+        private static void TestCommandExecuteNonQuery()
+        {
+            string connStr = ConfigurationManager.ConnectionStrings["ConnStr"].ConnectionString;
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                //创建命令
+                string uName = "Jason";
+                string uPwd = "123";
+                string uWorkName = "001";
+                string sql = $"INSERT INTO tblUser(FUserName,FPassword,FWorkNum) VALUES('{uName}','{uPwd}','{uWorkName}')";
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                conn.Open();
+                //1.执行T-SQL语句或储存过程，并返回受影响的行数
+                ///命令类型：插入、更新、删除 -----DML
+                int count = cmd.ExecuteNonQuery();
+                if (count > 0)
+                {
+                    Console.WriteLine("用户信息添加成功！");
+                }
+                string sql1 = "DeLETE FROM tblUser WHERE FUserID>7";
+                SqlCommand cmd1 = new SqlCommand(sql1, conn);
+                int count1 = cmd1.ExecuteNonQuery();
+                if (count > 0)
+                {
+                    Console.WriteLine("用户信息删除成功！");
+                }
+            }
+        }
+
+        private static void TestCreateCommand()
+        {
+            string connStr = ConfigurationManager.ConnectionStrings["connStr"].ConnectionString;
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connStr))
+                {
+                    conn.Open();
+                    ///创建命令，执行命令的对象 执行命令
+                    ///命令 --T-SQL或储存过程 --数据库里面创建
+                    ///SqlCommand 对SqlServer数据库执行的一个T-SQL语句
+                    ///CommandText:获取或设置要执行的T-SQL语句或储存过程名
+                    ///CommandType: CommandType.Text --执行是一个sql语句
+                    ///  CommandType.StoreProcedure --执行的是一个储存过程
+                    ///Parameters:SqlCommand对象的命令参数集合  空集合
+                    ///Transaction:获取设置要在其中执行的事务
+                    //第1钟方式
+                    string sql = "SELECT * FROM tblMaterial";
+                    SqlCommand cmd1 = new SqlCommand();
+                    cmd1.Connection = conn;
+                    cmd1.CommandText = sql;
+                    //cmd1.CommandType = CommandType.Text; //没有必要的
+                    //cmd1.CommandType = CommandType.StoredProcedure;//如果是储存过程必须设置
+                    //第2种方式
+                    SqlCommand cmd2 = new SqlCommand(sql);
+                    cmd2.Connection = conn;
+                    //第3钟方式
+                    SqlCommand cmd3 = new SqlCommand(sql, conn);
+                    //第4钟方式
+                    SqlCommand cmd4 = conn.CreateCommand();
+                    cmd4.CommandText = sql;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
+
         /// <summary>
         /// 测试连接池
         /// </summary>
