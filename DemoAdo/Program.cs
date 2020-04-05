@@ -31,10 +31,33 @@ namespace DemoAdo
 
             //TestCreateCommand();
             //TestCommandExecuteNonQuery();
+            //TestExecuteScalar();
             #endregion
 
-
             Console.ReadKey();
+
+        }
+
+        private static void TestExecuteScalar()
+        {
+            //ExecuteScalar方法
+            ///执行查询语句或储存过程，返回查询结果集中第一行第一列的值，忽略其他行或列
+            string connStr = ConfigurationManager.ConnectionStrings["ConnStr"].ConnectionString;
+            object o = null;
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                //创建命令
+                string sql = "SELECT * FROM tblUser";
+                string sql1 = "SELECT COUNT(1) FROM tblUser";
+                SqlCommand cmd = new SqlCommand(sql1, conn);
+                conn.Open();
+                ///使用：做查询，返回一个值  记录数 数据运算而出的一个结果
+                o = cmd.ExecuteScalar();
+            }
+            if (o != null)
+            {
+                Console.WriteLine(o);
+            }
         }
 
         private static void TestCommandExecuteNonQuery()
