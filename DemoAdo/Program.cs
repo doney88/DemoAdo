@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,7 +27,72 @@ namespace DemoAdo
 
             //事务SqlTransaction
             //TestTrasactionAdo();
+            //TestConnectionPool();
 
+            #endregion
+
+
+
+            Console.ReadKey();
+        }
+        /// <summary>
+        /// 测试连接池
+        /// </summary>
+        private static void TestConnectionPool()
+        {
+            //连接池 
+            //Ado.Net是默认启用连接池的
+            // Max Pool Size:最大连接数:100
+            // Min Pool Size:最小连接数:0
+            //Pooling 是否启用连接池 true,设置为false后，设置最大连接池数是无效的
+            #region 测试连接池的性能测试
+            /*
+            string connStr = "Server=.;database=HG;uid=sa;pwd=Chendong144216,;max Pool Size=5;Pooling=false";
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            for (int i = 0; i < 100; i++)
+            {
+                SqlConnection conn = new SqlConnection(connStr);
+                conn.Open();
+                //Console.WriteLine($"第{i+1}个链接已经打开");
+                conn.Close();
+            }
+            Console.WriteLine($"不启用连接池，耗时:{sw.ElapsedMilliseconds}ms!"); //400+毫秒
+
+            Stopwatch sw1 = new Stopwatch();
+            sw1.Stop();
+            string connStr1 = "Server=.;database=HG;uid=sa;pwd=Chendong144216,";
+            sw1.Start();
+            for (int i = 0; i < 100; i++)
+            {
+                SqlConnection conn1 = new SqlConnection(connStr1);
+                conn1.Open();
+                //Console.WriteLine($"第{i + 1}个链接已经打开");
+                conn1.Close();
+            }
+            Console.WriteLine($"启用连接池，耗时:{sw1.ElapsedMilliseconds}ms!");//4毫秒
+            sw1.Stop();
+            */
+            #endregion
+
+            #region 链接字符串对连接池的影响
+            //链接字符串区分连接池类型
+            //connStr1与connStr3一样的，所以他们公用一个连接池，connStr2会单独创建一个连接池，2个连接池
+            string connStr1 = "Server=.;database=HG;uid=sa;pwd=Chendong144216,;max Pool Size=5";
+            string connStr2 = "Server=.;database=HG; uid=sa;pwd=Chendong144216,;max Pool Size=5";
+            string connStr3 = "Server=.;database=HG;uid=sa;pwd=Chendong144216,;max Pool Size=5";
+            for (int i = 0; i < 5; i++)
+            {
+                SqlConnection conn1 = new SqlConnection(connStr1);
+                conn1.Open();
+                Console.WriteLine($"conn1第{i + 1}个链接打开！");
+                SqlConnection conn2 = new SqlConnection(connStr2);
+                conn2.Open();
+                Console.WriteLine($"conn2第{i + 1}个链接打开！");
+                SqlConnection conn3 = new SqlConnection(connStr3);
+                conn3.Open();
+                Console.WriteLine($"conn3第{i + 1}个链接打开！");
+            }
             #endregion
         }
 
