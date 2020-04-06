@@ -32,10 +32,33 @@ namespace DemoAdo
             //TestCreateCommand();
             //TestCommandExecuteNonQuery();
             //TestExecuteScalar();
+            //TestExecuteReader();
             #endregion
 
             Console.ReadKey();
 
+        }
+
+        private static void TestExecuteReader()
+        {
+            SqlDataReader dr = null;
+            string connStr = ConfigurationManager.ConnectionStrings["connStr"].ConnectionString;
+            SqlConnection conn = new SqlConnection(connStr);
+            string sql = "SELECT * FROM tblUser";
+            SqlCommand cmd = new SqlCommand(sql, conn);
+            conn.Open();
+            dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);//如果dr关闭，conn也跟着关闭；如果关闭conn,dr也随之关闭
+            int userid;
+            string userName;
+
+            while (dr.Read())
+            {
+                userid = int.Parse(dr["FUserID"].ToString());
+                userName = dr["FUserName"].ToString();
+                Console.WriteLine(userid + userName);
+            }
+            dr.Close();
+            conn.Close();
         }
 
         private static void TestExecuteScalar()
