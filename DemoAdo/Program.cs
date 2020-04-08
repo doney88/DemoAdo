@@ -35,10 +35,82 @@ namespace DemoAdo
 
 
             //TestExecuteReader();
+            //TestOutputParameter();
+            //TestInputOutParameter();
+            //TestReturnParameter();
             #endregion
 
             Console.ReadKey();
 
+        }
+
+        private static void TestReturnParameter()
+        {
+            string connstr = ConfigurationManager.ConnectionStrings["connStr"].ConnectionString;
+            using (SqlConnection conn = new SqlConnection(connstr))
+            {
+                SqlCommand cmd = new SqlCommand("GetUserID", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                //输出参数
+                SqlParameter paraId = new SqlParameter("@UserName", SqlDbType.NVarChar, 50);
+                SqlParameter[] paras = {
+                    new SqlParameter("@UserName", "admin"),
+                    new SqlParameter("@reValue",SqlDbType.Int,4) };
+                paras[1].Direction = ParameterDirection.ReturnValue;
+                //paraId.Value = "admin";
+                //paraId.Direction = ParameterDirection.Input;
+                //cmd.Parameters.Add(paraId);//添加灿哥参数
+                cmd.Parameters.AddRange(paras);
+                conn.Open();
+                cmd.ExecuteScalar();
+                Console.WriteLine(paras[1].Value.ToString());
+            }
+        }
+
+        private static void TestInputOutParameter()
+        {
+            //输入输出参数,（双向参数）
+            string connstr = ConfigurationManager.ConnectionStrings["connStr"].ConnectionString;
+            using (SqlConnection conn = new SqlConnection(connstr))
+            {
+                SqlCommand cmd = new SqlCommand("GetDeptName", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                //输出参数
+                SqlParameter paraName = new SqlParameter("@DeptName", SqlDbType.NVarChar, 50);
+                paraName.Value = "财";
+                paraName.Direction = ParameterDirection.InputOutput;
+                cmd.Parameters.Add(paraName);//添加灿哥参数
+
+                conn.Open();
+                object o = cmd.ExecuteScalar();
+                conn.Close();
+                Console.WriteLine(paraName.Value.ToString());
+            }
+        }
+
+        private static void TestOutputParameter()
+        {
+            //输出参数的使用
+            string connstr = ConfigurationManager.ConnectionStrings["connStr"].ConnectionString;
+            using (SqlConnection conn = new SqlConnection(connstr))
+            {
+                SqlCommand cmd = new SqlCommand("GetDept", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                SqlParameter paraId = new SqlParameter("@DeptId", 2);
+                cmd.Parameters.Add(paraId);//添加单个参数
+                //输出参数
+                SqlParameter paraName = new SqlParameter("@DeptName", SqlDbType.NVarChar, 50);
+                paraName.Direction = ParameterDirection.Output;
+                cmd.Parameters.Add(paraName);//添加灿哥参数
+
+                conn.Open();
+                object o = cmd.ExecuteScalar();
+                conn.Close();
+                Console.WriteLine(paraName.Value.ToString());
+            }
         }
 
         private static void TestExecuteReader()
