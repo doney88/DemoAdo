@@ -38,7 +38,14 @@ namespace DemoAdo
             //TestOutputParameter();
             //TestInputOutParameter();
             //TestReturnParameter();
+            //TestDataReader();
             #endregion
+            Console.ReadKey();
+
+        }
+
+        private static void TestDataReader()
+        {
             // SqlDataReader 从sql server数据库中杜宇只进的行流的方式
             ///特点：快速的、轻量级，只读的，遍历访问每一行数据的数据流，向一个方向，一行一行的，不能向后读取，不能修改数据
             ///缺点：不灵活，只适合数据小的情况，读取数据， 一直占用链接
@@ -73,21 +80,29 @@ namespace DemoAdo
                 SqlCommand cmd = new SqlCommand(sql, conn);
                 conn.Open();//必须在执行之前
                 SqlDataReader dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);//创建
+                DataTable dt = new DataTable();
+                //dt.Load(dr);
+                List<tblUser> users = new List<tblUser>();
+
                 if (dr.HasRows)
                 {
                     int passWord = dr.GetOrdinal("FPassword");
                     int indexId = dr.GetOrdinal("FUserID");
+                    int indexUserName = dr.GetOrdinal("FUserName");
                     while (dr.Read())//检测是否有数据
                     {
-                        int userId = (int)dr[0];
+                        tblUser user = new tblUser();
+                        //int userId = (int)dr[0]; //装箱拆箱性能损耗
+                        user.FUserID = dr.GetInt32(indexId);
                         //dr.GetName(0);//获取之地当列序号的列名
-                        string userName = dr["FUserName"].ToString(); //列名读取
+                        user.FUserName = dr.GetString(indexUserName); //列名读取
                         string iDName = dr.GetName(0); //获取指定学好的列名
+                        //Console.WriteLine(userId + " " + userName + " " + iDName) ;
+                        users.Add(user);
                     }
                 }
+                dr.Close();
             }
-            Console.ReadKey();
-
         }
 
         private static void TestReturnParameter()
