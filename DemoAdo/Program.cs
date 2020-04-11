@@ -32,47 +32,146 @@ namespace DemoAdo
             //TestCreateCommand();
             //TestCommandExecuteNonQuery();
             //TestExecuteScalar();
+
+
             //TestExecuteReader();
+            //TestOutputParameter();
+            //TestInputOutParameter();
+            //TestReturnParameter();
+            //TestDataReader();
             #endregion
-            ///DbType 参数的sqlDbType(数据类型 数据库的类型而言）
-            ///Direction 参数的类型，输入  输出 输入输出/返回值参数
-            ///ParameterName 参数的名称
-            ///Size 最大最小 字节为单位
-            ///Value 参数的值
-            ///SqlValue 作为SQL类型的参数的值
-            SqlParameter para1 = new SqlParameter();
-            para1.ParameterName = "@FUserName";//参数名
-            para1.SqlDbType = SqlDbType.NVarChar;//数据类型
-            para1.Value = "admin";//参数值
-            para1.Size = 20;//大小
-            SqlParameter para2 = new SqlParameter("@FPassword","cd");
-            SqlParameter para3 = new SqlParameter("@FUserID", SqlDbType.Int);
-            para3.Size = 4;
-            para3.Value = 1;
-
-            SqlParameter para4 = new SqlParameter("@FWorkNum", SqlDbType.VarChar, 50);
-            para4.Value = "001";
-
-            SqlParameter para5 = new SqlParameter("@UserName", SqlDbType.NVarChar, 20, "'cd'");
-            string sql = "SELECT * FROM tblUser WHERE FUserName = @FUserName and FPassword = @FPassword";
-            using (SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["connStr"].ConnectionString))
-            {
-                SqlCommand cmd = new SqlCommand(sql, conn);
-                //cmd.Parameters.Add(para1);
-                SqlParameter sqlParameter =  cmd.Parameters.Add("@FUserName", SqlDbType.NVarChar, 20);
-                sqlParameter.Value = "Admin";
-                //cmd.Parameters.Add(para2);
-                cmd.Parameters.AddWithValue("@FPassword", "cd");
-                conn.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
-                while (dr.Read())
-                {
-                    Console.WriteLine(dr["FUserID"].ToString());
-                }
-
-            }
             Console.ReadKey();
 
+        }
+
+        private static void TestDataReader()
+        {
+            // SqlDataReader 从sql server数据库中杜宇只进的行流的方式
+            ///特点：快速的、轻量级，只读的，遍历访问每一行数据的数据流，向一个方向，一行一行的，不能向后读取，不能修改数据
+            ///缺点：不灵活，只适合数据小的情况，读取数据， 一直占用链接
+            ///读取方式:Read() 获取第一行的数据，再次调用Read()方法的，
+            ///         当调用Read()方法返回False时，就表示不再有数据行。
+            /// 注意：
+            ///     链接对象一直保持Open状态，如果链接关闭，是不能读取数据的。使用完成过后，应该马上调用Close()关闭，不然Reader对象会一直占用链接
+            /// 创建方式，是不能直接构造的，cmd.ExecuteReader()来创建。
+            /// cmd.ExecuteReader(CommandBehaviour.CloseConnection) --好处：关闭Reader对象时，就会自动关闭链接
+            ///     读取时金亮使用与数据库字段类型相匹配的方法来取得对应值，会减少因类型不一致增加类型转换操作性能损耗
+            ///     没有读取到末尾就要关闭reader对象时，先调用cmd.Cancel(),然后在调用Reader.CLose()
+            ///     cmd.ExecuteReader()获取储存过程的返回值或输出参数，先调用reader.close(),然后才能获取参数值。
+            /// 常用属性:
+            ///     Connection:获取与Reader对象相关的SqlConnection
+            ///     FieldCount:当前行中的列数
+            ///     HasRows:Reader是否宝行一行还是多行
+            ///     IsClose:reader对象人是否已经关闭 true false
+            ///     Item[int]: 列序号，给定序列号的情况，获取指定列的值dr[1] object
+            ///     Item[String]: 列明，后去指定列的值
+            /// 常用方法：
+            ///     Close() 关闭dr
+            ///     GetInt32(列序号) --根据数据类型相匹配的方法
+            ///     GetFieldType(i) 获取数据类型的Type
+            ///     GetName(序列号) 获取指定列的列明
+            ///     GetOrdinal(列明) 获取指定列名的序号
+            ///     Read() 使dr前进到下一条记录
+            ///     NextResult() 使dr前进到下一条记录
+            string connstr = ConfigurationManager.ConnectionStrings["connStr"].ConnectionString;
+            using (SqlConnection conn = new SqlConnection(connstr))
+            {
+                string sql = "SELECT FUserID,FUserName,FPassword FROM tblUser";
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                conn.Open();//必须在执行之前
+                SqlDataReader dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);//创建
+                DataTable dt = new DataTable();
+                //dt.Load(dr);
+                List<tblUser> users = new List<tblUser>();
+
+                if (dr.HasRows)
+                {
+                    int passWord = dr.GetOrdinal("FPassword");
+                    int indexId = dr.GetOrdinal("FUserID");
+                    int indexUserName = dr.GetOrdinal("FUserName");
+                    while (dr.Read())//检测是否有数据
+                    {
+                        tblUser user = new tblUser();
+                        //int userId = (int)dr[0]; //装箱拆箱性能损耗
+                        user.FUserID = dr.GetInt32(indexId);
+                        //dr.GetName(0);//获取之地当列序号的列名
+                        user.FUserName = dr.GetString(indexUserName); //列名读取
+                        string iDName = dr.GetName(0); //获取指定学好的列名
+                        //Console.WriteLine(userId + " " + userName + " " + iDName) ;
+                        users.Add(user);
+                    }
+                }
+                dr.Close();
+            }
+        }
+
+        private static void TestReturnParameter()
+        {
+            string connstr = ConfigurationManager.ConnectionStrings["connStr"].ConnectionString;
+            using (SqlConnection conn = new SqlConnection(connstr))
+            {
+                SqlCommand cmd = new SqlCommand("GetUserID", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                //输出参数
+                SqlParameter paraId = new SqlParameter("@UserName", SqlDbType.NVarChar, 50);
+                SqlParameter[] paras = {
+                    new SqlParameter("@UserName", "admin"),
+                    new SqlParameter("@reValue",SqlDbType.Int,4) };
+                paras[1].Direction = ParameterDirection.ReturnValue;
+                //paraId.Value = "admin";
+                //paraId.Direction = ParameterDirection.Input;
+                //cmd.Parameters.Add(paraId);//添加灿哥参数
+                cmd.Parameters.AddRange(paras);
+                conn.Open();
+                cmd.ExecuteScalar();
+                Console.WriteLine(paras[1].Value.ToString());
+            }
+        }
+
+        private static void TestInputOutParameter()
+        {
+            //输入输出参数,（双向参数）
+            string connstr = ConfigurationManager.ConnectionStrings["connStr"].ConnectionString;
+            using (SqlConnection conn = new SqlConnection(connstr))
+            {
+                SqlCommand cmd = new SqlCommand("GetDeptName", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                //输出参数
+                SqlParameter paraName = new SqlParameter("@DeptName", SqlDbType.NVarChar, 50);
+                paraName.Value = "财";
+                paraName.Direction = ParameterDirection.InputOutput;
+                cmd.Parameters.Add(paraName);//添加灿哥参数
+
+                conn.Open();
+                object o = cmd.ExecuteScalar();
+                conn.Close();
+                Console.WriteLine(paraName.Value.ToString());
+            }
+        }
+
+        private static void TestOutputParameter()
+        {
+            //输出参数的使用
+            string connstr = ConfigurationManager.ConnectionStrings["connStr"].ConnectionString;
+            using (SqlConnection conn = new SqlConnection(connstr))
+            {
+                SqlCommand cmd = new SqlCommand("GetDept", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                SqlParameter paraId = new SqlParameter("@DeptId", 2);
+                cmd.Parameters.Add(paraId);//添加单个参数
+                //输出参数
+                SqlParameter paraName = new SqlParameter("@DeptName", SqlDbType.NVarChar, 50);
+                paraName.Direction = ParameterDirection.Output;
+                cmd.Parameters.Add(paraName);//添加灿哥参数
+
+                conn.Open();
+                object o = cmd.ExecuteScalar();
+                conn.Close();
+                Console.WriteLine(paraName.Value.ToString());
+            }
         }
 
         private static void TestExecuteReader()
