@@ -34,7 +34,43 @@ namespace DemoAdo
             //TestExecuteScalar();
             //TestExecuteReader();
             #endregion
+            ///DbType 参数的sqlDbType(数据类型 数据库的类型而言）
+            ///Direction 参数的类型，输入  输出 输入输出/返回值参数
+            ///ParameterName 参数的名称
+            ///Size 最大最小 字节为单位
+            ///Value 参数的值
+            ///SqlValue 作为SQL类型的参数的值
+            SqlParameter para1 = new SqlParameter();
+            para1.ParameterName = "@FUserName";//参数名
+            para1.SqlDbType = SqlDbType.NVarChar;//数据类型
+            para1.Value = "admin";//参数值
+            para1.Size = 20;//大小
+            SqlParameter para2 = new SqlParameter("@FPassword","cd");
+            SqlParameter para3 = new SqlParameter("@FUserID", SqlDbType.Int);
+            para3.Size = 4;
+            para3.Value = 1;
 
+            SqlParameter para4 = new SqlParameter("@FWorkNum", SqlDbType.VarChar, 50);
+            para4.Value = "001";
+
+            SqlParameter para5 = new SqlParameter("@UserName", SqlDbType.NVarChar, 20, "'cd'");
+            string sql = "SELECT * FROM tblUser WHERE FUserName = @FUserName and FPassword = @FPassword";
+            using (SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["connStr"].ConnectionString))
+            {
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                //cmd.Parameters.Add(para1);
+                SqlParameter sqlParameter =  cmd.Parameters.Add("@FUserName", SqlDbType.NVarChar, 20);
+                sqlParameter.Value = "Admin";
+                //cmd.Parameters.Add(para2);
+                cmd.Parameters.AddWithValue("@FPassword", "cd");
+                conn.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    Console.WriteLine(dr["FUserID"].ToString());
+                }
+
+            }
             Console.ReadKey();
 
         }
