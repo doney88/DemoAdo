@@ -45,7 +45,35 @@ namespace DemoAdo
             //TestDataSetRealtions();
             #endregion
 
-
+            ///SqlDataAdapter是什么
+            /// 适配器（桥接器）：DataSet与数据之间用于检索和保存数据的桥梁。
+            /// SqlDataAdapter类用于填充DataSet以及更新数据源的一组数据库命令和一个数据库连接。
+            /// SqlDataAdapter 是DataSet和SqlServer之间的桥接器
+            /// 他是如何提供桥接的？
+            ///         Fill填充到 DataSet里   Update 更改提交到数据库 数据保持一致。
+            ///         SqlConnnection SqlCommand一起使用，提高访问速度。
+            /// 4个重要属性
+            ///     SelectCommand  SqlCommand
+            ///     InsertCommand  插入记录
+            ///     UpdateCommand  更新数据库记录
+            ///     DeleteCommand  删除记录
+            ///     
+            ///SqlDataAdapter 对数据的操作也是建立在SqlCommand基础之上的
+            //1. 设置SelectCommand
+            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnStr"].ConnectionString);
+            SqlDataAdapter da = new SqlDataAdapter();
+            string sql = "SELECT * FROM tblUser";
+            da.SelectCommand = new SqlCommand(sql, conn);
+            //2. 
+            SqlCommand cmd = new SqlCommand(sql, conn);
+            SqlDataAdapter da1 = new SqlDataAdapter(cmd);
+            //3.查询语句和链接对象来实例化一个Adapter
+            SqlDataAdapter da2 = new SqlDataAdapter(sql, conn);
+            //4.查询语句 和链接字符串，也可以构建一个adapter
+            SqlDataAdapter da3 = new SqlDataAdapter(sql, ConfigurationManager.ConnectionStrings["ConnStr"].ConnectionString);
+            //如果是T-SQL查询语句，选择第三种方式
+            //带参数，添加参数，SqlCommand 选择第二种或第一
+            //不推荐使用第4钟
             Console.ReadKey();
 
         }
