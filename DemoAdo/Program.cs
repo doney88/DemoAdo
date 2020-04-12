@@ -10,6 +10,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using System.Data;
+using System.Data.Entity;
+using System.Runtime.InteropServices;
+
 namespace DemoAdo
 {
     class Program
@@ -39,11 +42,128 @@ namespace DemoAdo
             //TestInputOutParameter();
             //TestReturnParameter();
             //TestDataReader();
+            //TestDataSetRealtions();
             #endregion
+
+
             Console.ReadKey();
 
         }
 
+        private static void TestDataSetRealtions()
+        {
+            ///概念 DataSet数据在内存中的缓存 --- 内存中的数据库，DataTable内存数据库中的一个表，
+            ///     Ado.Net的核心组件
+            ///成员 一组DataTable的组成。DataRelation 相互关联，一起实施了数据的完整性。
+            /// 
+            ///应用 三种，结合DataAdapter使用
+            ///一 DataAdapter讲数据填充到DataSet中
+            ///二 DataAdapter 将DataSet中的更改提交到数据库
+            ///三 XML文档或文本加载到DataSet中
+            ///
+            ///作用：Ds将数据加载到内存中来执行，提高了数据访问的速度，提到硬盘数据的安全性，程序运行的速度和稳定性。
+            ///
+            ///特性：独立性，不依赖与任何数据库、离线和连接。数据视图  数据操作：灵活
+            ///
+            ///创建 DataSet() DataSet(名称)
+
+            //1.
+            //DataSet ds = new DataSet();
+            //ds.DataSetName = "ds1"; //默认名称 NewDataSet
+
+            //2. 
+            DataSet ds = new DataSet("ds1");
+
+            //常用属性
+            //DataSetName ds名称
+            DataTable dt1 = new DataTable("User");
+            DataTable dt2 = new DataTable("Dept");
+            //Tables DataTable集合
+            ds.Tables.Add(dt1); //添加dt1到ds中
+            ds.Tables.Add(dt2); //添加dt2到ds中
+            //DataTable dt = ds.Tables[0];//获取表
+            dt1.Columns.Add("UserId", typeof(int));
+            dt1.Columns.Add("UserName", typeof(string));
+            dt1.Columns.Add("Age", typeof(int));
+            dt1.Columns.Add("DeptId", typeof(int));
+
+            dt2.Columns.Add("DeptId", typeof(int));
+            dt2.Columns.Add("DeptName", typeof(string));
+
+            //dt1.PrimaryKey = new DataColumn[] { dt1.Columns[0] };//主键 --铸件约束
+            //dt2.Constraints.Add(new UniqueConstraint("uc", dt2.Columns[1]));//添加一个唯一约束，限制数据 规则，阻止
+
+            //dt1.Constraints.Add(new ForeignKeyConstraint("fk", dt2.Columns[0], dt1.Columns[3]));//外键约束
+            //默认情况下，建立关系，就会自动为附表中建立唯一约束，子表中外键建立一个外键约束
+            DataRelation relation = new DataRelation("relation", dt2.Columns[0], dt1.Columns[3], true);//关系 相互读取
+            ds.Relations.Add(relation);//添加到ds.Relations中
+
+            InitData(dt1, dt2);
+            //通过关系，相互读取数据
+            foreach (DataRow dr in dt2.Rows)
+            {
+                DataRow[] rows = dr.GetChildRows(relation);
+                foreach (DataRow r in rows)
+                {
+                    Console.WriteLine($"UserId:{r[0].ToString()},UserName:{r[1].ToString()},Age:{r[2].ToString()},DeptId:{r[3].ToString()}");
+                }
+            }
+
+            //子表读取父表中的数据
+
+            DataRow row = dt1.Rows[1].GetParentRow(relation);
+            Console.WriteLine($"DeptId:{row[0].ToString()},DeptName:{row[1].ToString()}");
+
+            ////方法
+            //ds.AcceptChanges();// 提交
+            //ds.RejectChanges();//回滚
+            //ds.Clear();//清楚所有表中的所有行的数据
+            //ds.Copy();//复制结构和数据
+            //ds.Clone();//复制架构，不包含数据
+            ////ds.Merge(rows/Datatable/dataset); 合并
+            //ds.Reset();//
+            ////ds.Load(IDataReader);
+        }
+
+        static public void InitData(DataTable dt1, DataTable dt2)
+        {
+            DataRow dr2 = dt2.NewRow();
+            dr2["DeptId"] = 1;
+            dr2["DeptName"] = "人事部";
+            dt2.Rows.Add(dr2);
+
+            dr2 = dt2.NewRow();
+            dr2["DeptId"] = 2;
+            dr2["DeptName"] = "管理部";
+            dt2.Rows.Add(dr2);
+
+            dr2 = dt2.NewRow();
+            dr2["DeptId"] = 3;
+            dr2["DeptName"] = "销售部";
+            dt2.Rows.Add(dr2);
+
+            DataRow dr1 = dt1.NewRow();
+            dr1["UserId"] = 1;
+            dr1["UserName"] = "李明";
+            dr1["Age"] = 22;
+            dr1["DeptId"] = 3;
+            dt1.Rows.Add(dr1);
+
+            dr1 = dt1.NewRow();
+            dr1["UserId"] = 2;
+            dr1["UserName"] = "刘丽";
+            dr1["Age"] = 24;
+            dr1["DeptId"] = 1;
+            dt1.Rows.Add(dr1);
+
+            dr1 = dt1.NewRow();
+            dr1["UserId"] = 3;
+            dr1["UserName"] = "王力";
+            dr1["Age"] = 23;
+            dr1["DeptId"] = 3;
+            dt1.Rows.Add(dr1);
+
+        }
         private static void TestDataReader()
         {
             // SqlDataReader 从sql server数据库中杜宇只进的行流的方式
